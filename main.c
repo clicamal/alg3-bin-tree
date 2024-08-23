@@ -1,5 +1,25 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
+
+#define LINE_SIZE 256
+
+typedef enum command {
+  INSERT_NODE,
+  PRINT_NODE,
+  RM_NODE,
+  NOP,
+  WRG_CMD,
+  EXIT
+} command;
+
+typedef enum error {
+  INV_CMD,
+  INV_VAL,
+  NO_ERR
+} error;
 
 typedef struct node {
   int val;
@@ -51,7 +71,7 @@ node *get_gt_sub_left(node *n) {
 
   node *aux = n->left;
 
-  while (aux != NULL) aux = aux->right;
+  while (aux->right != NULL) aux = aux->right;
 
   return aux;
 }
@@ -60,36 +80,39 @@ void rm_node(node **n, int val) {
   if (*n == NULL) return;
 
   if ((*n)->val > val) {
-    destroy_node(&(*n)->left);
+    rm_node(&(*n)->left, val);
   }
 
   else if ((*n)->val < val) {
-    destroy_node(&(*n)->right);
+    rm_node(&(*n)->right, val);
   }
 
   else {
-    node *aux;
-
     if ((*n)->left == NULL && (*n)->right == NULL) {
       destroy_node(n);
     }
 
     else if ((*n)->left == NULL) {
-      aux = *n;
+      node *aux = *n;
+
       *n = (*n)->right;
+
+      destroy_node(&aux);
     }
 
     else if ((*n)->right == NULL) {
-      aux = *n;
+      node *aux = *n;
+
       *n = (*n)->left;
+
+      destroy_node(&aux);
     }
 
     else {
-      aux = get_gt_sub_left(*n);
-      (*n)->val = aux->val;
+      node *gt_sub_left = get_gt_sub_left(*n);
+      (*n)->val = gt_sub_left->val;
+      rm_node(&(*n)->left, gt_sub_left->val);
     }
-
-    destroy_node(&aux);
   }
 }
 
@@ -109,18 +132,89 @@ void print_node(node *n, int lvl) {
   }
 }
 
+char *next_token(char *buffer) { return strtok(buffer, " "); }
+
+void read_line(char *buffer) {
+  fgets(buffer, LINE_SIZE, stdin);
+
+  buffer[(int8_t) (strchr(buffer, '\n') - buffer)] = '\0';
+}
+
+bool str_is_equal(char *str1, char *str2) { return strcmp(str1, str2) == 0; }
+
+command parse_command(char *buffer) {
+  char *token = next_token(buffer);
+
+  if (token == NULL) return NOP;
+
+  if (str_is_equal(token, "insert")) return INSERT_NODE;
+  if (str_is_equal(token, "print")) return PRINT_NODE;
+  if (str_is_equal(token, "remove")) return RM_NODE;
+  if (str_is_equal(token, "exit")) return EXIT;
+
+  return WRG_CMD;
+}
+
+// Must be called after parse_cmd;
+int parse_value(void) {
+  char end, *endptr = &end, *token = next_token(NULL);
+  int val;
+
+  if (token != NULL) val = strtol(token, &endptr, 10);
+  else *endptr = '\0';
+
+  return *endptr == '\0' ? val : -32767;
+}
+
 int main(void) {
-  node *root = create_node(0);
+  node *root = NULL;
+  command cmd = NOP;
+  error err = NO_ERR;
 
-  insert_node(&root, 5);
-  insert_node(&root, 10);
+  while (cmd != EXIT) {
+    if (err != NO_ERR) {
+      if (err == INV_CMD) printf("*Invalid command*\n");
+      else if (err == INV_VAL) printf("*Invalid value*\n");
 
-  insert_node(&root, 4);
-  insert_node(&root, 3);
+      err = NO_ERR;
+    }
 
-  rm_node(&root, 0);
+    char buffer[LINE_SIZE];
+    int val;
 
-  print_node(root, 0);
+    printf("Command > ");
+    read_line(buffer);
+
+    cmd = parse_command(buffer);
+    val = parse_value();
+
+    if (val == -32767) err = INV_VAL;
+
+    switch (cmd) {
+    case PRINT_NODE:
+      print_node(root, 0);
+      break;
+
+    case INSERT_NODE:
+      if (err == INV_VAL) continue;
+
+      insert_node(&root, val);
+      break;
+
+    case RM_NODE:
+      if (err == INV_VAL) continue;
+
+      rm_node(&root, val);
+      break;
+
+    case NOP:
+      continue;
+
+    default:
+      err = INV_CMD;
+      continue;
+    }
+  }
 
   destroy_node(&root);
 
