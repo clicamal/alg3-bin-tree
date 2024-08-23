@@ -9,6 +9,8 @@ typedef struct node {
 node *create_node(int);
 void destroy_node(node **);
 void insert_node(node **, int);
+node *get_gt_sub_left(node *);
+void rm_node(node **, int);
 void print_node(node *, int);
 
 node *create_node(int val) {
