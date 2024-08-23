@@ -6,6 +6,11 @@ typedef struct node {
   struct node *left, *right;
 } node;
 
+node *create_node(int);
+void destroy_node(node **);
+void insert_node(node **, int);
+void print_node(node *, int);
+
 node *create_node(int val) {
   node *n = (node *) malloc(sizeof(node));
 
