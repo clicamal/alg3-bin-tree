@@ -44,6 +44,53 @@ void insert_node(node **insert_root, int val) {
   else insert_node(&(*insert_root)->right, val);
 }
 
+node *get_gt_sub_left(node *n) {
+  if (n == NULL) return NULL;
+
+  node *aux = n->left;
+
+  while (aux != NULL) aux = aux->right;
+
+  return aux;
+}
+
+void rm_node(node **n, int val) {
+  if (*n == NULL) return;
+
+  if ((*n)->val > val) {
+    destroy_node(&(*n)->left);
+  }
+
+  else if ((*n)->val < val) {
+    destroy_node(&(*n)->right);
+  }
+
+  else {
+    node *aux;
+
+    if ((*n)->left == NULL && (*n)->right == NULL) {
+      destroy_node(n);
+    }
+
+    else if ((*n)->left == NULL) {
+      aux = *n;
+      *n = (*n)->right;
+    }
+
+    else if ((*n)->right == NULL) {
+      aux = *n;
+      *n = (*n)->left;
+    }
+
+    else {
+      aux = get_gt_sub_left(*n);
+      (*n)->val = aux->val;
+    }
+
+    destroy_node(&aux);
+  }
+}
+
 void print_node(node *n, int lvl) {
   for (int i = 0; i < lvl; i++)
     printf("  ");
@@ -68,6 +115,8 @@ int main(void) {
 
   insert_node(&root, 4);
   insert_node(&root, 3);
+
+  rm_node(&root, 0);
 
   print_node(root, 0);
 
