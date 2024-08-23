@@ -32,6 +32,11 @@ void insert_node(node **, int);
 node *get_gt_sub_left(node *);
 void rm_node(node **, int);
 void print_node(node *, int);
+char *next_token(char *);
+void read_line(char *);
+bool str_is_equal(char *, char *);
+command parse_command(char *);
+int parse_value(void);
 
 node *create_node(int val) {
   node *n = (node *) malloc(sizeof(node));
