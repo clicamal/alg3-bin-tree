@@ -10,6 +10,7 @@ typedef enum command {
   INSERT_NODE,
   PRINT_NODE,
   RM_NODE,
+  SEARCH_NODE,
   NOP,
   WRG_CMD,
   EXIT
@@ -31,6 +32,7 @@ void destroy_node(node **);
 void insert_node(node **, int);
 node *get_gt_sub_left(node *);
 void rm_node(node **, int);
+node *search_node(node *, int);
 void print_node(node *, int);
 char *next_token(char *);
 void read_line(char *);
@@ -121,6 +123,15 @@ void rm_node(node **n, int val) {
   }
 }
 
+node *search_node(node *n, int val) {
+  if (n == NULL) return NULL;
+
+  if (n->val > val) return search_node(n->left, val);
+
+  if (n->val < val) return search_node(n->right, val);
+  else return n;
+}
+
 void print_node(node *n, int lvl) {
   for (int i = 0; i < lvl; i++)
     printf("  ");
@@ -155,6 +166,7 @@ command parse_command(char *buffer) {
   if (str_is_equal(token, "insert")) return INSERT_NODE;
   if (str_is_equal(token, "print")) return PRINT_NODE;
   if (str_is_equal(token, "remove")) return RM_NODE;
+  if (str_is_equal(token, "search")) return SEARCH_NODE;
   if (str_is_equal(token, "exit")) return EXIT;
 
   return WRG_CMD;
@@ -177,6 +189,8 @@ int main(void) {
   error err = NO_ERR;
 
   while (cmd != EXIT) {
+    node *aux;
+
     if (err != NO_ERR) {
       if (err == INV_CMD) printf("*Invalid command*\n");
       else if (err == INV_VAL) printf("*Invalid value*\n");
@@ -210,6 +224,15 @@ int main(void) {
       if (err == INV_VAL) continue;
 
       rm_node(&root, val);
+      break;
+
+    case SEARCH_NODE:
+      if (err == INV_VAL) continue;
+
+      aux = search_node(root, val);
+
+      if (aux == NULL) printf("*Value not found in tree*\n");
+      else printf("*Value found*\n");
       break;
 
     case NOP:
